@@ -26,11 +26,11 @@ the three locked planning documents and no source code.
 All three documents are locked. Scope, stack, and milestone acceptance
 criteria are committed; changes require an explicit version bump.
 
-| Document | Version | Purpose |
-|---|---|---|
-| [`SPEC.md`](./SPEC.md) | v0.4 | Product scope, user flows, functional requirements, phase plan |
-| [`BUILD_PLAN.md`](./BUILD_PLAN.md) | v0.1 | Tech stack, repo layout, milestones M0–M6, dependencies |
-| [`TEST_PLAN.md`](./TEST_PLAN.md) | v0.2 | Per-milestone acceptance tests and manual checklists |
+| Document                           | Version | Purpose                                                        |
+| ---------------------------------- | ------- | -------------------------------------------------------------- |
+| [`SPEC.md`](./SPEC.md)             | v0.4    | Product scope, user flows, functional requirements, phase plan |
+| [`BUILD_PLAN.md`](./BUILD_PLAN.md) | v0.1    | Tech stack, repo layout, milestones M0–M6, dependencies        |
+| [`TEST_PLAN.md`](./TEST_PLAN.md)   | v0.2    | Per-milestone acceptance tests and manual checklists           |
 
 ## Technology stack
 

@@ -1,0 +1,24 @@
+# Dependencies & build output (mirrors .gitignore where relevant)
+node_modules
+.pnpm-store
+.next
+.vercel
+dist
+build
+out
+coverage
+
+# Locked planning docs — leave formatting alone
+SPEC.md
+BUILD_PLAN.md
+TEST_PLAN.md
+
+# Generated files
+*.tsbuildinfo
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Native / non-JS
+ios
+infra/nginx
