@@ -1,0 +1,52 @@
+# Keep Docker build context lean. Same logic as .gitignore for build
+# artefacts, plus paths that aren't relevant to any container build.
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies & build output
+**/node_modules
+**/.pnpm-store
+**/dist
+**/build
+**/out
+**/.next
+**/.vercel
+**/coverage
+**/.tscache
+**/*.tsbuildinfo
+
+# Environment & secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode
+**/*.swp
+
+# Native projects (not needed by any backend/web image)
+ios
+
+# Docs (not needed at runtime)
+*.md
+SPEC.md
+BUILD_PLAN.md
+TEST_PLAN.md
+README.md
+
+# Test artefacts
+**/test-results
+**/playwright-report
+
+# Logs
+**/*.log
+logs
+
+# Docker meta (avoid recursive context)
+infra/Dockerfile.*
+.dockerignore
