@@ -1,0 +1,68 @@
+# Docker Compose stack for ebay.rycsprojects.com.
+#
+# Services:
+#   api  — @ebay/backend Hono API, bound to 127.0.0.1:3001 so only the
+#          host's nginx (which terminates TLS for ebay.rycsprojects.com)
+#          can reach it. Never exposed to the open internet directly.
+#   db   — Postgres 16. Internal-only; api reaches it via the
+#          ebay-internal bridge network. Data persists in the named
+#          volume `db-data`.
+#
+# Run from this directory:
+#   docker compose pull && docker compose up -d --build
+# Tail logs:
+#   docker compose logs -f api
+# Stop:
+#   docker compose down
+#
+# Env vars come from `infra/.env` (gitignored). Template at
+# `infra/.env.example` lists every variable that must be set.
+
+name: ebay
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    image: ebay-api:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: '3001'
+      DATABASE_URL: postgres://ebay:${POSTGRES_PASSWORD}@db:5432/ebay
+    ports:
+      - '127.0.0.1:3001:3001'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ebay-internal
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ebay
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in infra/.env}
+      POSTGRES_DB: ebay
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - ebay-internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ebay -d ebay']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  db-data:
+    name: ebay_db-data
+
+networks:
+  ebay-internal:
+    driver: bridge
