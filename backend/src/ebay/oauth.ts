@@ -87,7 +87,6 @@ export function buildConsentUrl(config: EbayOAuthConfig, state: string): string 
     redirect_uri: config.ruName,
     scope: SCOPES.join(' '),
     state,
-    prompt: 'login',
   });
   return `${config.endpoints.authorize}?${params}`;
 }
