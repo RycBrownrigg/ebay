@@ -111,13 +111,23 @@ either says `Restarting`, tail the logs immediately to find why.
 
 ### Restart api without rebuilding
 
-Use after toggling an env var in `infra/.env` or to recover from a
-hung process:
+For recovering from a hung process:
 
 ```bash
 cd /var/www/projects/ebay/infra
 docker compose restart api
 ```
+
+**Note:** `restart` does **not** pick up changes to `infra/.env`. Env
+vars are baked into a container at creation time, and `restart` just
+stops/starts the existing container. To apply env-file changes, use:
+
+```bash
+docker compose up -d --force-recreate api
+```
+
+`up -d` alone usually detects changes and recreates, but
+`--force-recreate` is the no-doubt-about-it form.
 
 ### Postgres shell
 
@@ -161,7 +171,9 @@ Changing it later requires a manual `ALTER USER` to keep the volume:
 
 ```bash
 cd /var/www/projects/ebay/infra
-NEW_PW=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
+# Strip newlines and spaces from the openssl output — base64 wraps at
+# 64 chars by default and the wrap will leak into your secret.
+NEW_PW=$(openssl rand -base64 48 | tr -d '\n /+=' | cut -c1-32)
 
 # Apply inside the running db container
 docker compose exec db psql -U ebay -d ebay \
@@ -171,8 +183,9 @@ docker compose exec db psql -U ebay -d ebay \
 sed -i.bak "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${NEW_PW}|" .env
 rm .env.bak
 
-# Restart api so it picks up the new DATABASE_URL
-docker compose restart api
+# Recreate api so it picks up the new DATABASE_URL — `restart` would
+# NOT reload the env_file (env vars are baked in at container create).
+docker compose up -d --force-recreate api
 ```
 
 Save the new value to your password manager.
@@ -181,9 +194,14 @@ Save the new value to your password manager.
 
 This value is shared with eBay. Rotation = update both sides:
 
-1. Generate new token: `openssl rand -base64 60 | tr -d '/+=' | cut -c1-64`
+1. Generate new token (strip newlines and spaces — openssl wraps base64
+   at 64 chars by default, and an embedded space will fail eBay's
+   validation):
+   `openssl rand -base64 80 | tr -d '\n /+=' | cut -c1-64`
 2. Update `infra/.env` on the VPS with the new value.
-3. `docker compose restart api`.
+3. `docker compose up -d --force-recreate api` — recreates the api
+   container so it picks up the new env_file. `docker compose restart`
+   does NOT reload env-file changes (vars are baked in at create time).
 4. In the eBay developer console (Application Keys → Notifications
    → Marketplace Account Deletion), update the verification token
    field with the new value and re-save. eBay will re-verify by

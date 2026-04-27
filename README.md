@@ -72,12 +72,11 @@ worlds; not npm packages).
 Defined in [`BUILD_PLAN.md`](./BUILD_PLAN.md):
 
 - **M0** — Repo scaffold, VPS prep, and `/api/health` live at
-  `https://ebay.rycsprojects.com`. **Deployed 2026-04-26.** All
-  scaffolds (monorepo, shared, backend, web, iOS) and the
-  production stack (Docker compose, host nginx, Let's Encrypt TLS)
-  are live. Final prerequisite — subscribing to eBay's marketplace
-  account-deletion notifications to unlock the production
-  keyset — pending eBay developer console availability.
+  `https://ebay.rycsprojects.com`. **Complete (2026-04-27).** All
+  scaffolds (monorepo, shared, backend, web, iOS) and the production
+  stack (Docker compose, host nginx, Let's Encrypt TLS) are live.
+  Marketplace account-deletion notifications subscribed; production
+  eBay keyset enabled.
 - **M1** — OAuth flow plus publishing a dummy fixed-price listing to
   the eBay sandbox from a minimal web form (the integration de-risk).
 - **M2–M6** — Camera flow, drafts, shipping and return profiles, Best
@@ -93,8 +92,9 @@ One-time setup tracked to avoid blocking later milestones:
 - [x] DNS A record: `ebay.rycsprojects.com` → VPS IP
 - [x] Docker + Docker Compose v2 installed on the VPS
 - [x] Apple Developer Program membership (required for TestFlight)
-- [ ] eBay production keyset (gated on the marketplace account deletion
-      compliance endpoint, deployed during M0 step 6)
+- [x] eBay production keyset (unlocked 2026-04-27 by subscribing to
+      marketplace account-deletion notifications via the deployed
+      `/api/ebay/account-deletion` endpoint)
 
 ## Local development
 
