@@ -72,9 +72,12 @@ worlds; not npm packages).
 Defined in [`BUILD_PLAN.md`](./BUILD_PLAN.md):
 
 - **M0** — Repo scaffold, VPS prep, and `/api/health` live at
-  `https://ebay.rycsprojects.com`. _In progress (5/7 internal steps
-  done — monorepo, shared, backend, web, iOS scaffolds all ✅;
-  infra + VPS deploy remain)._
+  `https://ebay.rycsprojects.com`. **Deployed 2026-04-26.** All
+  scaffolds (monorepo, shared, backend, web, iOS) and the
+  production stack (Docker compose, host nginx, Let's Encrypt TLS)
+  are live. Final prerequisite — subscribing to eBay's marketplace
+  account-deletion notifications to unlock the production
+  keyset — pending eBay developer console availability.
 - **M1** — OAuth flow plus publishing a dummy fixed-price listing to
   the eBay sandbox from a minimal web form (the integration de-risk).
 - **M2–M6** — Camera flow, drafts, shipping and return profiles, Best
@@ -125,6 +128,13 @@ pnpm format:check   # Prettier check (CI gate)
 ```
 
 iOS tests run separately via Xcode (`⌘U`) or `xcodebuild test`.
+
+## Production deploy
+
+The live stack runs at `https://ebay.rycsprojects.com` on a personal
+Ubuntu 24.04 VPS. Routine deploys, secret rotation, rollback, TLS
+renewal, and troubleshooting are documented in
+[`infra/DEPLOY.md`](./infra/DEPLOY.md).
 
 ## Out of scope for v1
 
