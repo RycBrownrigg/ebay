@@ -8,16 +8,22 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@ebay/shared": "workspace:*",
     "@hono/node-server": "^1.13.7",
+    "drizzle-orm": "^0.36.4",
     "hono": "^4.6.13",
+    "postgres": "^3.4.5",
     "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "drizzle-kit": "^0.28.1",
     "vitest": "^2.1.8"
   }
 }
