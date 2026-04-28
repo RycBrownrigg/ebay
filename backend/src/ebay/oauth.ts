@@ -27,18 +27,22 @@ const ENDPOINTS: Record<EbayEnv, EbayOAuthEndpoints> = {
 };
 
 // Scopes are full URLs and identical between sandbox and production —
-// they're identifiers, not endpoints. Requesting a broad set up front
-// avoids a re-consent dance every time a future milestone needs a new
-// scope.
+// they're identifiers, not endpoints.
+//
+// M1 minimum: just enough to publish a fixed-price listing via Trading
+// API. Each additional scope is opt-in per app from eBay's side; the
+// initial OAuth attempt failed with `error=invalid_scope` when we
+// requested commerce.identity.readonly (known to require manual
+// per-app approval) plus buy.browse and commerce.taxonomy.readonly
+// (not auto-granted on new apps). Re-add those as later milestones
+// need them, after granting the corresponding scopes in the eBay
+// developer console (Application Keys → OAuth Scopes).
 export const SCOPES = [
   'https://api.ebay.com/oauth/api_scope',
   'https://api.ebay.com/oauth/api_scope/sell.inventory',
   'https://api.ebay.com/oauth/api_scope/sell.account',
   'https://api.ebay.com/oauth/api_scope/sell.fulfillment',
   'https://api.ebay.com/oauth/api_scope/sell.marketing',
-  'https://api.ebay.com/oauth/api_scope/commerce.taxonomy.readonly',
-  'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
-  'https://api.ebay.com/oauth/api_scope/buy.browse',
 ] as const;
 
 export interface EbayOAuthConfig {

@@ -5,12 +5,7 @@ import { sealRefreshToken } from '../crypto/seal.js';
 import { db } from '../db/client.js';
 import { getOrCreateHouseholdUser } from '../db/household.js';
 import { ebayAuth } from '../db/schema.js';
-import {
-  buildConsentUrl,
-  exchangeCodeForTokens,
-  fetchEbayUserInfo,
-  loadOAuthConfig,
-} from '../ebay/oauth.js';
+import { buildConsentUrl, exchangeCodeForTokens, loadOAuthConfig } from '../ebay/oauth.js';
 
 export const authEbayRoute = new Hono();
 
@@ -71,7 +66,14 @@ authEbayRoute.get('/callback', async (c) => {
       return c.json({ error: 'eBay did not return a refresh_token' }, 502);
     }
 
-    const userInfo = await fetchEbayUserInfo(config, tokens.access_token);
+    // ebay_user_id placeholder for M1: the commerce.identity.readonly
+    // scope (required to fetch the real value via fetchEbayUserInfo)
+    // needs per-app opt-in approval from eBay. We'll backfill the real
+    // value in M1.5+ once we either get that scope approved or pull the
+    // user id via Trading API GetUser. The schema column is NOT NULL,
+    // so any non-empty string is acceptable as a stand-in.
+    const ebayUserIdPlaceholder = 'pending';
+
     const householdUser = await getOrCreateHouseholdUser();
     const sealed = sealRefreshToken(tokens.refresh_token);
     const now = Date.now();
@@ -84,7 +86,7 @@ authEbayRoute.get('/callback', async (c) => {
         refreshTokenSealed: sealed,
         accessTokenCache: tokens.access_token,
         accessTokenExpiresAt: expiresAt,
-        ebayUserId: userInfo.userId,
+        ebayUserId: ebayUserIdPlaceholder,
       })
       .onConflictDoUpdate({
         target: ebayAuth.userId,
@@ -92,7 +94,7 @@ authEbayRoute.get('/callback', async (c) => {
           refreshTokenSealed: sealed,
           accessTokenCache: tokens.access_token,
           accessTokenExpiresAt: expiresAt,
-          ebayUserId: userInfo.userId,
+          ebayUserId: ebayUserIdPlaceholder,
           updatedAt: new Date(),
         },
       });
