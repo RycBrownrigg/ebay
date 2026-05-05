@@ -6,6 +6,20 @@
 // case-sensitive. The element order matters in some cases, but the
 // shape below follows eBay's recommended ordering for AddFixedPriceItem.
 
+// ListingDuration values eBay accepts. Note: as of 2026, fixed-price
+// listings only support `GTC` (Good 'Til Cancelled). The Days_N values
+// are still accepted by the parser but eBay silently rewrites them to
+// GTC and emits warning 21920214. Auctions (when M2 adds them) accept
+// the Days_N values.
+export type ListingDuration =
+  | 'GTC'
+  | 'Days_1'
+  | 'Days_3'
+  | 'Days_5'
+  | 'Days_7'
+  | 'Days_10'
+  | 'Days_30';
+
 export interface ListingPayload {
   title: string;
   description: string;
@@ -19,7 +33,7 @@ export interface ListingPayload {
   shippingCost: { value: number; currency: string };
   returnAcceptedDays: 30 | 60;
   dispatchTimeMaxDays?: 1 | 2 | 3;
-  listingDurationDays?: 1 | 3 | 5 | 7 | 10 | 30;
+  listingDuration?: ListingDuration;
 }
 
 function escapeXml(value: string): string {
@@ -41,7 +55,7 @@ function picturesXml(urls: string[]): string {
 
 export function buildAddFixedPriceItemXml(payload: ListingPayload): string {
   const dispatchDays = payload.dispatchTimeMaxDays ?? 3;
-  const durationDays = payload.listingDurationDays ?? 7;
+  const duration = payload.listingDuration ?? 'GTC';
   const pictures =
     payload.pictureUrls && payload.pictureUrls.length > 0 ? picturesXml(payload.pictureUrls) : '';
 
@@ -60,7 +74,7 @@ export function buildAddFixedPriceItemXml(payload: ListingPayload): string {
     `<Currency>${escapeXml(payload.startPrice.currency)}</Currency>`,
     `<ConditionID>${payload.conditionId}</ConditionID>`,
     `<DispatchTimeMax>${dispatchDays}</DispatchTimeMax>`,
-    `<ListingDuration>Days_${durationDays}</ListingDuration>`,
+    `<ListingDuration>${duration}</ListingDuration>`,
     '<ListingType>FixedPriceItem</ListingType>',
     pictures,
     `<PostalCode>${escapeXml(payload.postalCode)}</PostalCode>`,

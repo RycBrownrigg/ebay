@@ -43,17 +43,19 @@ describe('buildAddFixedPriceItemXml', () => {
     expect(xml).toContain('<ShippingServiceCost currencyID="USD">5.00</ShippingServiceCost>');
   });
 
-  it('defaults dispatch days to 3 and listing duration to Days_7', () => {
+  it('defaults dispatch days to 3 and listing duration to GTC', () => {
     const xml = buildAddFixedPriceItemXml(MINIMAL);
     expect(xml).toContain('<DispatchTimeMax>3</DispatchTimeMax>');
-    expect(xml).toContain('<ListingDuration>Days_7</ListingDuration>');
+    // GTC is the only duration eBay accepts for fixed-price listings as
+    // of 2026; defaulting to it avoids a silent rewrite + warning.
+    expect(xml).toContain('<ListingDuration>GTC</ListingDuration>');
   });
 
   it('respects override of dispatch days and listing duration', () => {
     const xml = buildAddFixedPriceItemXml({
       ...MINIMAL,
       dispatchTimeMaxDays: 1,
-      listingDurationDays: 30,
+      listingDuration: 'Days_30',
     });
     expect(xml).toContain('<DispatchTimeMax>1</DispatchTimeMax>');
     expect(xml).toContain('<ListingDuration>Days_30</ListingDuration>');
