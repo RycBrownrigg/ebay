@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { ListingDraftSchema, type ListingDraft } from '@ebay/shared';
 import { getOrCreateHouseholdUser } from '../db/household.js';
 import { getEbayAccessToken } from '../ebay/access-token.js';
 import { loadOAuthConfig } from '../ebay/oauth.js';
@@ -8,9 +9,35 @@ import type { ListingPayload } from '../ebay/trading/xml.js';
 
 export const listingsPublishRoute = new Hono();
 
-// M1 hardcoded payload — used by POST /api/listings/publish to prove
-// the OAuth + Trading API + sealing pipeline works end-to-end against
-// eBay sandbox. M2+ will replace this with form-driven fields.
+// Map a validated form draft to the Trading API XML builder's payload
+// type. Currently these are structurally identical — every ListingDraft
+// is a valid ListingPayload because the schema is narrower (USD only,
+// shipping-service enum). If they diverge later (e.g., to carry policy
+// IDs or apply eBay-specific transforms), the divergence happens here
+// rather than in the schema or the XML builder.
+function draftToPayload(draft: ListingDraft): ListingPayload {
+  return {
+    title: draft.title,
+    description: draft.description,
+    categoryId: draft.categoryId,
+    conditionId: draft.conditionId,
+    startPrice: draft.startPrice,
+    postalCode: draft.postalCode,
+    quantity: draft.quantity,
+    shippingService: draft.shippingService,
+    shippingCost: draft.shippingCost,
+    returnAcceptedDays: draft.returnAcceptedDays,
+    ...(draft.pictureUrls !== undefined ? { pictureUrls: draft.pictureUrls } : {}),
+    ...(draft.dispatchTimeMaxDays !== undefined
+      ? { dispatchTimeMaxDays: draft.dispatchTimeMaxDays }
+      : {}),
+    ...(draft.listingDuration !== undefined ? { listingDuration: draft.listingDuration } : {}),
+  };
+}
+
+// M1-style hardcoded payload — used when POST /api/listings/publish
+// is called with no body (the curl smoke-test path). M2 forms send a
+// real body and skip this entirely.
 //
 // Title gets a timestamp so each test publish is identifiable in the
 // sandbox seller's listings page (eBay's title cap is 80 chars).
@@ -75,7 +102,20 @@ listingsPublishRoute.post('/', async (c) => {
     );
   }
 
-  const payload = buildHardcodedPayload();
+  // Decide the payload: parse a JSON body if present (M2 form path),
+  // fall through to the hardcoded smoke-test payload if absent (M1
+  // curl path — still useful for one-shot verification after a deploy).
+  const raw: unknown = await c.req.json().catch(() => null);
+  let payload: ListingPayload;
+  if (raw === null || raw === undefined) {
+    payload = buildHardcodedPayload();
+  } else {
+    const parsed = ListingDraftSchema.safeParse(raw);
+    if (!parsed.success) {
+      return c.json({ error: 'invalid body', issues: parsed.error.issues }, 400);
+    }
+    payload = draftToPayload(parsed.data);
+  }
 
   let result: AddItemResult;
   try {

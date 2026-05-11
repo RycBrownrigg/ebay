@@ -133,4 +133,102 @@ describe('POST /api/listings/publish', () => {
     const body = (await res.json()) as { error?: string };
     expect(body.error).toMatch(/network unreachable/);
   });
+
+  // M2.1 — JSON body parsing
+  describe('with a JSON body', () => {
+    const VALID_DRAFT_BODY = {
+      title: 'Form-submitted listing',
+      description: 'From the M2.1 listing form.',
+      categoryId: '88433',
+      conditionId: 1000,
+      startPrice: { value: 12.5, currency: 'USD' },
+      postalCode: '95125',
+      quantity: 2,
+      shippingService: 'USPSPriority',
+      shippingCost: { value: 6, currency: 'USD' },
+      returnAcceptedDays: 60,
+    };
+
+    beforeEach(() => {
+      vi.mocked(getEbayAccessToken).mockResolvedValue('access-token-xyz');
+      vi.mocked(addFixedPriceItem).mockResolvedValue({
+        ack: 'Success',
+        itemId: '110987654321',
+      });
+    });
+
+    it('uses the form values when a valid body is provided', async () => {
+      const res = await createApp().request('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(VALID_DRAFT_BODY),
+      });
+      expect(res.status).toBe(200);
+
+      const [payload] = vi.mocked(addFixedPriceItem).mock.calls[0]!;
+      expect(payload.title).toBe('Form-submitted listing');
+      expect(payload.description).toBe('From the M2.1 listing form.');
+      expect(payload.quantity).toBe(2);
+      expect(payload.startPrice.value).toBe(12.5);
+      expect(payload.returnAcceptedDays).toBe(60);
+      expect(payload.shippingCost.value).toBe(6);
+    });
+
+    it('trims and collapses spaces in title (schema transform)', async () => {
+      await createApp().request('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          ...VALID_DRAFT_BODY,
+          title: '   Apple   iPhone 14   Pro   ',
+        }),
+      });
+      const [payload] = vi.mocked(addFixedPriceItem).mock.calls[0]!;
+      expect(payload.title).toBe('Apple iPhone 14 Pro');
+    });
+
+    it('returns 400 with Zod issues on invalid body', async () => {
+      const res = await createApp().request('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...VALID_DRAFT_BODY, title: '' }),
+      });
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as {
+        error?: string;
+        issues?: { path: (string | number)[]; message: string }[];
+      };
+      expect(body.error).toBe('invalid body');
+      expect(body.issues).toBeDefined();
+      expect(body.issues!.some((i) => i.path.includes('title'))).toBe(true);
+    });
+
+    it('returns 400 when a required field is missing', async () => {
+      const { quantity: _, ...withoutQuantity } = VALID_DRAFT_BODY;
+      const res = await createApp().request('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(withoutQuantity),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when shippingService is not in the allowed enum', async () => {
+      const res = await createApp().request('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...VALID_DRAFT_BODY, shippingService: 'CarrierPigeon' }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('falls through to hardcoded payload when body is absent (M1 smoke-test path)', async () => {
+      const res = await createApp().request('/api/listings/publish', { method: 'POST' });
+      expect(res.status).toBe(200);
+      const [payload] = vi.mocked(addFixedPriceItem).mock.calls[0]!;
+      // The hardcoded title starts with "M1 test listing", a signature unique
+      // to the no-body fallback path.
+      expect(payload.title).toMatch(/M1 test listing/);
+    });
+  });
 });
