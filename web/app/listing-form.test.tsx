@@ -166,6 +166,13 @@ describe('ListingForm', () => {
     });
   });
 
+  // Coverage gap acknowledged: a unit test for "user clicks 60 radio → body
+  // has number 60" would catch the radio-valueAsNumber regression that the
+  // 2026-05-11 deploy hit, but jsdom + RTL + RHF don't reliably propagate
+  // radio change events the way a real browser does. We caught it via
+  // manual smoke test instead. If we revisit, the working pattern is
+  // likely Playwright or a real-browser e2e harness.
+
   it('resets the form when "Reset to defaults" is clicked', async () => {
     const user = userEvent.setup();
     renderWithClient(<ListingForm />);

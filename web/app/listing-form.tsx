@@ -244,16 +244,28 @@ export function ListingForm() {
       <fieldset>
         <legend className="text-sm font-medium text-neutral-700">Return window</legend>
         <div className="mt-1 flex gap-4 text-sm">
-          {[30, 60].map((days) => (
-            <label key={days} className="flex items-center gap-1.5">
-              <input
-                type="radio"
-                value={days}
-                {...form.register('returnAcceptedDays', { valueAsNumber: true })}
-              />
-              {days} days
-            </label>
-          ))}
+          {(() => {
+            // Register the radio group ONCE outside the map. Calling
+            // form.register() inside the .map (once per radio) would
+            // re-register on every render and leave RHF in an
+            // inconsistent state where the second register call
+            // overwrites the first's setValueAs binding. The two
+            // radios share name="returnAcceptedDays" via the same
+            // registration; the {...reg} spread is identical on both.
+            //
+            // setValueAs (not valueAsNumber) because RHF's
+            // valueAsNumber reads input.valueAsNumber natively, which
+            // is NaN for radio inputs — they have no numeric value
+            // type. Number() on the DOM string value works for any
+            // numeric radio group.
+            const reg = form.register('returnAcceptedDays', { setValueAs: (v) => Number(v) });
+            return [30, 60].map((days) => (
+              <label key={days} className="flex items-center gap-1.5">
+                <input type="radio" value={days} {...reg} />
+                {days} days
+              </label>
+            ));
+          })()}
         </div>
         {errors.returnAcceptedDays?.message && (
           <p className="mt-1 text-xs text-red-600">{errors.returnAcceptedDays.message}</p>
