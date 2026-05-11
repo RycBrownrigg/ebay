@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import { ListingDraftSchema, type ListingDraft } from '@ebay/shared';
 import { z } from 'zod';
 
@@ -243,30 +243,42 @@ export function ListingForm() {
 
       <fieldset>
         <legend className="text-sm font-medium text-neutral-700">Return window</legend>
-        <div className="mt-1 flex gap-4 text-sm">
-          {(() => {
-            // Register the radio group ONCE outside the map. Calling
-            // form.register() inside the .map (once per radio) would
-            // re-register on every render and leave RHF in an
-            // inconsistent state where the second register call
-            // overwrites the first's setValueAs binding. The two
-            // radios share name="returnAcceptedDays" via the same
-            // registration; the {...reg} spread is identical on both.
-            //
-            // setValueAs (not valueAsNumber) because RHF's
-            // valueAsNumber reads input.valueAsNumber natively, which
-            // is NaN for radio inputs — they have no numeric value
-            // type. Number() on the DOM string value works for any
-            // numeric radio group.
-            const reg = form.register('returnAcceptedDays', { setValueAs: (v) => Number(v) });
-            return [30, 60].map((days) => (
-              <label key={days} className="flex items-center gap-1.5">
-                <input type="radio" value={days} {...reg} />
-                {days} days
-              </label>
-            ));
-          })()}
-        </div>
+        {/*
+          Controller (not register) for numeric radio groups. Background:
+          - The schema types returnAcceptedDays as z.literal(30)|z.literal(60).
+          - <input type="radio" value={30}> renders as value="30" (string)
+            because the DOM coerces JSX numeric attrs to strings.
+          - With register(), RHF determines checked-state by comparing
+            formValue === input.value — i.e. 30 === "30", which is
+            strict-false. Neither radio renders as checked initially.
+            And on click, RHF reads "30" from the DOM and stores it as
+            a string, breaking the literal-number schema.
+          - register's setValueAs/valueAsNumber options are silently
+            ignored for radio onChange events — a documented RHF gotcha.
+          - Controller bypasses all of that: we render two inputs with
+            our own onChange that calls field.onChange(days) with the
+            number directly, and checked={field.value === days} compares
+            number === number, which works.
+        */}
+        <Controller
+          control={form.control}
+          name="returnAcceptedDays"
+          render={({ field }) => (
+            <div className="mt-1 flex gap-4 text-sm">
+              {([30, 60] as const).map((days) => (
+                <label key={days} className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    checked={field.value === days}
+                    onChange={() => field.onChange(days)}
+                    onBlur={field.onBlur}
+                  />
+                  {days} days
+                </label>
+              ))}
+            </div>
+          )}
+        />
         {errors.returnAcceptedDays?.message && (
           <p className="mt-1 text-xs text-red-600">{errors.returnAcceptedDays.message}</p>
         )}
