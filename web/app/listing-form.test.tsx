@@ -44,7 +44,9 @@ describe('ListingForm', () => {
   });
 
   it('renders the form with defaults pre-populated', () => {
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
     expect(screen.getByLabelText('Title')).toHaveValue('Test listing — do not buy');
     expect(screen.getByLabelText('Category ID')).toHaveValue('88433');
     expect(screen.getByLabelText('Price (USD)')).toHaveValue(9.99);
@@ -61,7 +63,9 @@ describe('ListingForm', () => {
       json: async () => SUCCESS_BODY,
     });
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     await user.click(screen.getByTestId('publish-button'));
 
@@ -90,7 +94,9 @@ describe('ListingForm', () => {
 
   it('shows a field error when title is cleared and submit is attempted', async () => {
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     const title = screen.getByLabelText('Title');
     await user.clear(title);
@@ -105,7 +111,9 @@ describe('ListingForm', () => {
 
   it('shows a field error when ZIP is malformed', async () => {
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     const zip = screen.getByLabelText('ZIP');
     await user.clear(zip);
@@ -125,7 +133,9 @@ describe('ListingForm', () => {
       json: async () => FAILURE_BODY,
     });
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     await user.click(screen.getByTestId('publish-button'));
 
@@ -142,7 +152,9 @@ describe('ListingForm', () => {
       json: async () => SERVER_ERROR_BODY,
     });
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     await user.click(screen.getByTestId('publish-button'));
 
@@ -157,7 +169,9 @@ describe('ListingForm', () => {
       new Error('NetworkError when attempting to fetch resource.'),
     );
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     await user.click(screen.getByTestId('publish-button'));
 
@@ -175,7 +189,9 @@ describe('ListingForm', () => {
 
   it('resets the form when "Reset to defaults" is clicked', async () => {
     const user = userEvent.setup();
-    renderWithClient(<ListingForm />);
+    renderWithClient(
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+    );
 
     const title = screen.getByLabelText('Title');
     await user.clear(title);

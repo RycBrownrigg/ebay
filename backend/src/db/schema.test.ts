@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { ebayAuth, users } from './schema.js';
+import { ebayAuth, listingDrafts, users } from './schema.js';
 
 // Schema-shape tests — exercise the table definitions without needing a
 // live Postgres. Real DB integration tests land in M1.2 alongside the
@@ -61,6 +61,29 @@ describe('ebay_auth table', () => {
 
   it('user_id has a foreign key reference to users with cascade delete', () => {
     const config = getTableConfig(ebayAuth);
+    expect(config.foreignKeys.length).toBeGreaterThan(0);
+    const fk = config.foreignKeys[0]!;
+    expect(fk.onDelete).toBe('cascade');
+  });
+});
+
+describe('listing_drafts table', () => {
+  it('has the expected columns', () => {
+    const config = getTableConfig(listingDrafts);
+    const names = config.columns.map((c) => c.name);
+    expect(names).toEqual(
+      expect.arrayContaining(['id', 'user_id', 'payload', 'created_at', 'updated_at']),
+    );
+  });
+
+  it('payload is NOT NULL', () => {
+    const config = getTableConfig(listingDrafts);
+    const col = config.columns.find((c) => c.name === 'payload');
+    expect(col?.notNull).toBe(true);
+  });
+
+  it('user_id has a foreign key reference to users with cascade delete', () => {
+    const config = getTableConfig(listingDrafts);
     expect(config.foreignKeys.length).toBeGreaterThan(0);
     const fk = config.foreignKeys[0]!;
     expect(fk.onDelete).toBe('cascade');

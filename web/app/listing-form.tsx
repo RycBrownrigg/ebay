@@ -1,10 +1,12 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import { ListingDraftSchema, type ListingDraft } from '@ebay/shared';
 import { z } from 'zod';
+import type { DraftRecord } from './drafts-panel';
 
 // Response shape from POST /api/listings/publish. Same three-arm
 // discriminated union the M1 PublishButton consumed; we revalidate
@@ -106,17 +108,96 @@ const SHIPPING_OPTIONS: { value: ListingDraft['shippingService']; label: string 
   { value: 'ShippingMethodStandard', label: 'Generic standard shipping' },
 ];
 
-export function ListingForm() {
+interface ListingFormProps {
+  activeDraft: DraftRecord | null;
+  onDraftSaved: (draft: DraftRecord) => void;
+  onAfterPublish: () => void;
+}
+
+async function saveDraftRequest(
+  draftId: string | null,
+  payload: ListingDraft,
+): Promise<DraftRecord> {
+  const url = draftId === null ? '/api/drafts' : `/api/drafts/${draftId}`;
+  const method = draftId === null ? 'POST' : 'PATCH';
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} saving draft`);
+  }
+  const json = (await res.json()) as { draft: DraftRecord };
+  return json.draft;
+}
+
+async function deleteDraftRequest(draftId: string): Promise<void> {
+  const res = await fetch(`/api/drafts/${draftId}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`HTTP ${res.status} deleting draft`);
+  }
+}
+
+export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: ListingFormProps) {
+  const queryClient = useQueryClient();
   const form = useForm<ListingDraft>({
     resolver: zodResolver(ListingDraftSchema),
     defaultValues: DEFAULT_VALUES,
     mode: 'onBlur',
   });
 
-  const mutation = useMutation({ mutationFn: publishListing });
+  // When the parent loads a different draft, reset the form to that
+  // draft's payload (merged with DEFAULT_VALUES to keep required
+  // fields populated even if the draft is partial).
+  useEffect(() => {
+    if (activeDraft === null) return;
+    form.reset({ ...DEFAULT_VALUES, ...activeDraft.payload });
+  }, [activeDraft, form]);
+
+  const publishMutation = useMutation({ mutationFn: publishListing });
+
+  const saveDraftMutation = useMutation({
+    mutationFn: (payload: ListingDraft) => saveDraftRequest(activeDraft?.id ?? null, payload),
+    onSuccess: (draft) => {
+      queryClient.invalidateQueries({ queryKey: ['drafts'] });
+      onDraftSaved(draft);
+    },
+  });
+
+  // When a publish succeeds AND there's an active draft, delete it so
+  // it disappears from the drafts list. Watching publishMutation.data
+  // for the Success/Warning ack avoids deleting on Failure/error.
+  useEffect(() => {
+    const result = publishMutation.data;
+    if (!result || !activeDraft) return;
+    if (!('ack' in result)) return;
+    if (result.ack !== 'Success' && result.ack !== 'Warning') return;
+
+    deleteDraftRequest(activeDraft.id)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['drafts'] });
+        onAfterPublish();
+      })
+      .catch(() => {
+        // Soft failure: the publish landed; the draft just stays. The
+        // user can manually delete it from the drafts list. We avoid
+        // surfacing this as an error to not muddy the publish-success UX.
+      });
+  }, [publishMutation.data, activeDraft, queryClient, onAfterPublish]);
+
+  // Alias the publish mutation under its M1 name so existing tests and
+  // result-render blocks below don't need touching.
+  const mutation = publishMutation;
 
   const onSubmit: SubmitHandler<ListingDraft> = (data) => {
-    mutation.mutate(data);
+    publishMutation.mutate(data);
+  };
+
+  const onSaveDraft = () => {
+    // Save the current form values without running schema validation
+    // (drafts can be partial). getValues returns whatever's typed.
+    saveDraftMutation.mutate(form.getValues());
   };
 
   const errors = form.formState.errors;
@@ -287,7 +368,7 @@ export function ListingForm() {
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || saveDraftMutation.isPending}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:bg-neutral-400"
           data-testid="publish-button"
         >
@@ -295,13 +376,34 @@ export function ListingForm() {
         </button>
         <button
           type="button"
+          onClick={onSaveDraft}
+          disabled={mutation.isPending || saveDraftMutation.isPending}
+          className="rounded border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 disabled:opacity-50"
+          data-testid="save-draft-button"
+        >
+          {saveDraftMutation.isPending ? 'Saving…' : activeDraft ? 'Update draft' : 'Save as draft'}
+        </button>
+        <button
+          type="button"
           onClick={() => form.reset(DEFAULT_VALUES)}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || saveDraftMutation.isPending}
           className="text-sm text-neutral-600 underline disabled:opacity-50"
         >
           Reset to defaults
         </button>
       </div>
+
+      {saveDraftMutation.isError && (
+        <p role="alert" className="text-sm text-red-700" data-testid="save-draft-error">
+          Failed to save draft: {saveDraftMutation.error.message}
+        </p>
+      )}
+
+      {saveDraftMutation.isSuccess && !saveDraftMutation.isPending && (
+        <p className="text-sm text-green-700" data-testid="save-draft-success">
+          Draft saved.
+        </p>
+      )}
 
       {mutation.isError && (
         <p

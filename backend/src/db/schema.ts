@@ -1,4 +1,5 @@
-import { customType, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { customType, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { ListingDraft } from '@ebay/shared';
 
 // Postgres bytea (binary) column — used for libsodium-sealed values
 // where the raw ciphertext is binary, not base64/hex. Drizzle ships
@@ -44,7 +45,26 @@ export const ebayAuth = pgTable('ebay_auth', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Work-in-progress listing drafts. The payload column stores a partial
+// ListingDraft as opaque JSON — drafts are deliberately permissive (the
+// user can save with just a title typed). Validation happens at publish
+// time, not at draft save. Owned by the household user; cascade-deletes
+// with that user (matches ebay_auth's lifecycle).
+export const listingDrafts = pgTable('listing_drafts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // $type() is a Drizzle hint, not a runtime check — the column accepts any
+  // JSON. Partial<ListingDraft> just gives downstream code helpful types.
+  payload: jsonb('payload').notNull().$type<Partial<ListingDraft>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type EbayAuth = typeof ebayAuth.$inferSelect;
 export type NewEbayAuth = typeof ebayAuth.$inferInsert;
+export type ListingDraftRecord = typeof listingDrafts.$inferSelect;
+export type NewListingDraftRecord = typeof listingDrafts.$inferInsert;
