@@ -45,7 +45,7 @@ describe('ListingForm', () => {
 
   it('renders the form with defaults pre-populated', () => {
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
     expect(screen.getByLabelText('Title')).toHaveValue('Test listing — do not buy');
     expect(screen.getByLabelText('Category ID')).toHaveValue('88433');
@@ -64,7 +64,7 @@ describe('ListingForm', () => {
     });
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     await user.click(screen.getByTestId('publish-button'));
@@ -95,7 +95,7 @@ describe('ListingForm', () => {
   it('shows a field error when title is cleared and submit is attempted', async () => {
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     const title = screen.getByLabelText('Title');
@@ -112,7 +112,7 @@ describe('ListingForm', () => {
   it('shows a field error when ZIP is malformed', async () => {
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     const zip = screen.getByLabelText('ZIP');
@@ -134,7 +134,7 @@ describe('ListingForm', () => {
     });
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     await user.click(screen.getByTestId('publish-button'));
@@ -153,7 +153,7 @@ describe('ListingForm', () => {
     });
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     await user.click(screen.getByTestId('publish-button'));
@@ -170,7 +170,7 @@ describe('ListingForm', () => {
     );
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     await user.click(screen.getByTestId('publish-button'));
@@ -190,7 +190,7 @@ describe('ListingForm', () => {
   it('resets the form when "Reset to defaults" is clicked', async () => {
     const user = userEvent.setup();
     renderWithClient(
-      <ListingForm activeDraft={null} onDraftSaved={() => {}} onAfterPublish={() => {}} />,
+      <ListingForm activeDraft={null} onDraftSaved={() => {}} onClearActiveDraft={() => {}} />,
     );
 
     const title = screen.getByLabelText('Title');

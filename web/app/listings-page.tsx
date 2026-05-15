@@ -35,7 +35,7 @@ export function ListingsPage() {
       <ListingForm
         activeDraft={activeDraft}
         onDraftSaved={setActiveDraft}
-        onAfterPublish={() => setActiveDraft(null)}
+        onClearActiveDraft={() => setActiveDraft(null)}
       />
     </>
   );

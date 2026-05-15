@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -111,7 +111,12 @@ const SHIPPING_OPTIONS: { value: ListingDraft['shippingService']; label: string 
 interface ListingFormProps {
   activeDraft: DraftRecord | null;
   onDraftSaved: (draft: DraftRecord) => void;
-  onAfterPublish: () => void;
+  // Tell the parent to clear `activeDraft`. Called from two places:
+  // (1) after a successful publish (the published draft was deleted, so
+  // the loaded reference is stale); (2) when the user clicks
+  // "Reset to defaults" (intent: start a brand-new listing, not keep
+  // editing the loaded draft).
+  onClearActiveDraft: () => void;
 }
 
 async function saveDraftRequest(
@@ -139,8 +144,13 @@ async function deleteDraftRequest(draftId: string): Promise<void> {
   }
 }
 
-export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: ListingFormProps) {
+export function ListingForm({ activeDraft, onDraftSaved, onClearActiveDraft }: ListingFormProps) {
   const queryClient = useQueryClient();
+  // Transient "Draft saved." message. State + setTimeout (vs reading
+  // saveDraftMutation.isSuccess directly) so the success banner clears
+  // on its own after a few seconds — otherwise it sticks around through
+  // subsequent publishes/resets/edits and clutters the UI.
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const form = useForm<ListingDraft>({
     resolver: zodResolver(ListingDraftSchema),
     defaultValues: DEFAULT_VALUES,
@@ -162,8 +172,16 @@ export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: Listi
     onSuccess: (draft) => {
       queryClient.invalidateQueries({ queryKey: ['drafts'] });
       onDraftSaved(draft);
+      setShowSaveSuccess(true);
     },
   });
+
+  // Fade the "Draft saved." message after 3 seconds.
+  useEffect(() => {
+    if (!showSaveSuccess) return;
+    const t = window.setTimeout(() => setShowSaveSuccess(false), 3000);
+    return () => window.clearTimeout(t);
+  }, [showSaveSuccess]);
 
   // When a publish succeeds AND there's an active draft, delete it so
   // it disappears from the drafts list. Watching publishMutation.data
@@ -177,14 +195,18 @@ export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: Listi
     deleteDraftRequest(activeDraft.id)
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ['drafts'] });
-        onAfterPublish();
+        // Also clear the stale "Draft saved." banner on publish — it
+        // belongs to the previous workflow step and shouldn't linger
+        // next to "Listing published."
+        setShowSaveSuccess(false);
+        onClearActiveDraft();
       })
       .catch(() => {
         // Soft failure: the publish landed; the draft just stays. The
         // user can manually delete it from the drafts list. We avoid
         // surfacing this as an error to not muddy the publish-success UX.
       });
-  }, [publishMutation.data, activeDraft, queryClient, onAfterPublish]);
+  }, [publishMutation.data, activeDraft, queryClient, onClearActiveDraft]);
 
   // Alias the publish mutation under its M1 name so existing tests and
   // result-render blocks below don't need touching.
@@ -385,7 +407,15 @@ export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: Listi
         </button>
         <button
           type="button"
-          onClick={() => form.reset(DEFAULT_VALUES)}
+          onClick={() => {
+            // Reset = "I want to start a new listing." Clear the form
+            // values, drop the active-draft pointer (so the next Save
+            // creates a new draft rather than updating the previous
+            // one), and clear the stale save-success banner.
+            form.reset(DEFAULT_VALUES);
+            onClearActiveDraft();
+            setShowSaveSuccess(false);
+          }}
           disabled={mutation.isPending || saveDraftMutation.isPending}
           className="text-sm text-neutral-600 underline disabled:opacity-50"
         >
@@ -399,8 +429,8 @@ export function ListingForm({ activeDraft, onDraftSaved, onAfterPublish }: Listi
         </p>
       )}
 
-      {saveDraftMutation.isSuccess && !saveDraftMutation.isPending && (
-        <p className="text-sm text-green-700" data-testid="save-draft-success">
+      {showSaveSuccess && (
+        <p className="text-sm font-medium text-green-700" data-testid="save-draft-success">
           Draft saved.
         </p>
       )}
