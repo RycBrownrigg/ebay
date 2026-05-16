@@ -4,6 +4,7 @@ import { ebayAccountDeletionRoute } from './routes/ebay-account-deletion.js';
 import { authEbayRoute } from './routes/auth-ebay.js';
 import { listingsPublishRoute } from './routes/listings-publish.js';
 import { draftsRoute } from './routes/drafts.js';
+import { draftImagesRoute } from './routes/draft-images.js';
 
 export function createApp(): Hono {
   const app = new Hono();
@@ -12,5 +13,6 @@ export function createApp(): Hono {
   app.route('/api/auth/ebay', authEbayRoute);
   app.route('/api/listings/publish', listingsPublishRoute);
   app.route('/api/drafts', draftsRoute);
+  app.route('/api/drafts', draftImagesRoute);
   return app;
 }

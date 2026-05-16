@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { ebayAuth, listingDrafts, users } from './schema.js';
+import { draftImages, ebayAuth, listingDrafts, users } from './schema.js';
 
 // Schema-shape tests — exercise the table definitions without needing a
 // live Postgres. Real DB integration tests land in M1.2 alongside the
@@ -84,6 +84,45 @@ describe('listing_drafts table', () => {
 
   it('user_id has a foreign key reference to users with cascade delete', () => {
     const config = getTableConfig(listingDrafts);
+    expect(config.foreignKeys.length).toBeGreaterThan(0);
+    const fk = config.foreignKeys[0]!;
+    expect(fk.onDelete).toBe('cascade');
+  });
+});
+
+describe('draft_images table', () => {
+  it('has the expected columns', () => {
+    const config = getTableConfig(draftImages);
+    const names = config.columns.map((c) => c.name);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'id',
+        'draft_id',
+        'storage_path',
+        'eps_url',
+        'mime_type',
+        'sort_order',
+        'created_at',
+      ]),
+    );
+  });
+
+  it('storage_path and mime_type are NOT NULL', () => {
+    const config = getTableConfig(draftImages);
+    const storagePath = config.columns.find((c) => c.name === 'storage_path');
+    const mimeType = config.columns.find((c) => c.name === 'mime_type');
+    expect(storagePath?.notNull).toBe(true);
+    expect(mimeType?.notNull).toBe(true);
+  });
+
+  it('eps_url is nullable', () => {
+    const config = getTableConfig(draftImages);
+    const epsUrl = config.columns.find((c) => c.name === 'eps_url');
+    expect(epsUrl?.notNull).toBeFalsy();
+  });
+
+  it('draft_id has a foreign key reference to listing_drafts with cascade delete', () => {
+    const config = getTableConfig(draftImages);
     expect(config.foreignKeys.length).toBeGreaterThan(0);
     const fk = config.foreignKeys[0]!;
     expect(fk.onDelete).toBe('cascade');

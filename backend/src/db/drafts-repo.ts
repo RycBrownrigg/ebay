@@ -45,3 +45,14 @@ export async function deleteDraft(userId: string, id: string): Promise<boolean> 
     .returning({ id: listingDrafts.id });
   return rows.length > 0;
 }
+
+export async function getDraftById(
+  userId: string,
+  id: string,
+): Promise<ListingDraftRecord | null> {
+  const [row] = await db
+    .select()
+    .from(listingDrafts)
+    .where(and(eq(listingDrafts.id, id), eq(listingDrafts.userId, userId)));
+  return row ?? null;
+}

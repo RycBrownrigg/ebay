@@ -1,4 +1,4 @@
-import { customType, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { customType, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import type { ListingDraft } from '@ebay/shared';
 
 // Postgres bytea (binary) column — used for libsodium-sealed values
@@ -62,9 +62,27 @@ export const listingDrafts = pgTable('listing_drafts', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Images attached to a listing draft. Each row tracks one processed JPEG
+// on disk. The storage_path is relative to IMAGES_DIR (env var) so the
+// absolute location can change without a DB migration. eps_url is null
+// until eBay ingests the image into EPS during a publish call.
+export const draftImages = pgTable('draft_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  draftId: uuid('draft_id')
+    .notNull()
+    .references(() => listingDrafts.id, { onDelete: 'cascade' }),
+  storagePath: text('storage_path').notNull(),
+  epsUrl: text('eps_url'),
+  mimeType: text('mime_type').notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type EbayAuth = typeof ebayAuth.$inferSelect;
 export type NewEbayAuth = typeof ebayAuth.$inferInsert;
 export type ListingDraftRecord = typeof listingDrafts.$inferSelect;
 export type NewListingDraftRecord = typeof listingDrafts.$inferInsert;
+export type DraftImage = typeof draftImages.$inferSelect;
+export type NewDraftImage = typeof draftImages.$inferInsert;

@@ -110,6 +110,9 @@ const SHIPPING_OPTIONS: { value: ListingDraft['shippingService']; label: string 
 
 interface ListingFormProps {
   activeDraft: DraftRecord | null;
+  // Image URLs managed by <ImageUploader> in the parent. Included in
+  // the publish body as pictureUrls so eBay EPS can ingest them.
+  pictureUrls?: string[];
   onDraftSaved: (draft: DraftRecord) => void;
   // Tell the parent to clear `activeDraft`. Called from two places:
   // (1) after a successful publish (the published draft was deleted, so
@@ -144,7 +147,12 @@ async function deleteDraftRequest(draftId: string): Promise<void> {
   }
 }
 
-export function ListingForm({ activeDraft, onDraftSaved, onClearActiveDraft }: ListingFormProps) {
+export function ListingForm({
+  activeDraft,
+  pictureUrls = [],
+  onDraftSaved,
+  onClearActiveDraft,
+}: ListingFormProps) {
   const queryClient = useQueryClient();
   // Transient "Draft saved." message. State + setTimeout (vs reading
   // saveDraftMutation.isSuccess directly) so the success banner clears
@@ -213,7 +221,10 @@ export function ListingForm({ activeDraft, onDraftSaved, onClearActiveDraft }: L
   const mutation = publishMutation;
 
   const onSubmit: SubmitHandler<ListingDraft> = (data) => {
-    publishMutation.mutate(data);
+    publishMutation.mutate({
+      ...data,
+      ...(pictureUrls.length > 0 ? { pictureUrls } : {}),
+    });
   };
 
   const onSaveDraft = () => {

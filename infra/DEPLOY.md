@@ -49,6 +49,31 @@ public internet
 
 ---
 
+## M2.2 one-time setup (image storage)
+
+Run once on the VPS before deploying the M2.2 release. Creates the images
+directory and gives the `node` container user (uid 1000) write access.
+
+```bash
+mkdir -p /var/www/projects/ebay/images
+sudo chown 1000:1000 /var/www/projects/ebay/images
+```
+
+Also add these two lines to `infra/.env`:
+
+```
+IMAGES_DIR=/images
+IMAGES_BASE_URL=https://ebay.rycsprojects.com
+```
+
+nginx needs to be reloaded after pulling the updated config:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
 ## Routine deploy (every release after the first)
 
 Run from your local machine, then SSH in:

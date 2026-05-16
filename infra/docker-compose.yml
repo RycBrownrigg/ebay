@@ -35,6 +35,8 @@ services:
       DATABASE_URL: postgres://ebay:${POSTGRES_PASSWORD}@db:5432/ebay
     ports:
       - '127.0.0.1:3001:3001'
+    volumes:
+      - ../images:/images
     depends_on:
       db:
         condition: service_healthy

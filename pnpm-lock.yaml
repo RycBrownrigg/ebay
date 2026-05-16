@@ -38,6 +38,9 @@ importers:
       postgres:
         specifier: ^3.4.5
         version: 3.4.9
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -2662,8 +2665,7 @@ snapshots:
     dependencies:
       react-hook-form: 7.75.0(react@19.2.5)
 
-  '@img/colour@1.1.0':
-    optional: true
+  '@img/colour@1.1.0': {}
 
   '@img/sharp-darwin-arm64@0.34.5':
     optionalDependencies:
@@ -3665,8 +3667,7 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.7.4:
-    optional: true
+  semver@7.7.4: {}
 
   sharp@0.34.5:
     dependencies:
@@ -3698,7 +3699,6 @@ snapshots:
       '@img/sharp-win32-arm64': 0.34.5
       '@img/sharp-win32-ia32': 0.34.5
       '@img/sharp-win32-x64': 0.34.5
-    optional: true
 
   siginfo@2.0.0: {}
 

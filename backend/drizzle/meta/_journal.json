@@ -15,6 +15,13 @@
       "when": 1778546467340,
       "tag": "0001_gifted_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778940000000,
+      "tag": "0002_draft_images",
+      "breakpoints": true
     }
   ]
 }
