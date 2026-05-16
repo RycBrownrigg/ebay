@@ -66,11 +66,25 @@ IMAGES_DIR=/images
 IMAGES_BASE_URL=https://ebay.rycsprojects.com
 ```
 
-nginx needs to be reloaded after pulling the updated config:
+The live nginx config on the VPS was modified by certbot and is separate
+from the repo copy. Add the `/images/` location block manually to the live
+config before reloading (only needed once — already done on the original VPS):
 
 ```bash
+sudo nano /etc/nginx/sites-enabled/ebay.rycsprojects.com
+# Add before the location /api/ block:
+#   location /images/ {
+#       alias /var/www/projects/ebay/images/;
+#       access_log off;
+#       expires 30d;
+#       add_header Cache-Control "public, max-age=2592000";
+#   }
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+On a **fresh VPS rebuild**, this step is unnecessary — the repo's
+`infra/nginx/ebay.rycsprojects.com.conf` already includes the `/images/`
+block, and certbot preserves it when it adds the TLS config.
 
 ---
 

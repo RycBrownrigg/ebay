@@ -1,3 +1,14 @@
+/**
+ * Household user bootstrap helper.
+ *
+ * M1 single-user stub used until a real household login flow exists. Every
+ * backend operation that needs "the current user" calls this, which returns
+ * the single seeded row or creates it on first call. The eventual auth flow
+ * will replace this with a real session lookup.
+ *
+ * Exports:
+ * - `getOrCreateHouseholdUser` — Returns the household user row, creating it if absent.
+ */
 import { eq } from 'drizzle-orm';
 import { db } from './client.js';
 import { users, type User } from './schema.js';
@@ -9,6 +20,7 @@ import { users, type User } from './schema.js';
 
 const HOUSEHOLD_EMAIL = 'household@local';
 
+/** Returns the single household user row, inserting it on first call. */
 export async function getOrCreateHouseholdUser(): Promise<User> {
   const existing = await db
     .select()

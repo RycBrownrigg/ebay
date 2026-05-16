@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * Image uploader panel for listing drafts.
+ *
+ * Displays a thumbnail grid with upload, delete, and left/right reorder
+ * controls. Requires an active draft — shows a prompt when draftId is null.
+ * Notifies the parent of the current image URL list after every mutation so
+ * the listing form can include pictureUrls in the publish body.
+ *
+ * Exports:
+ * - `ImageUploader` — Upload panel with thumbnail grid and reorder controls.
+ */
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -60,6 +71,7 @@ async function swapImages(
   });
 }
 
+/** Upload panel for draft images — thumbnail grid with reorder and delete controls. */
 export function ImageUploader({ draftId, onImagesChange }: ImageUploaderProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);

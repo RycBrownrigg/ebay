@@ -1,3 +1,15 @@
+/**
+ * Programmatic Drizzle migration runner.
+ *
+ * Applies any pending migrations from the drizzle/ folder at container
+ * startup. Migrations are idempotent (Drizzle tracks applied migrations in a
+ * dedicated table), so this is safe to call on every start. Uses a separate
+ * single-connection client as recommended by Drizzle, separate from the
+ * runtime connection pool.
+ *
+ * Exports:
+ * - `runMigrations` — Connects to the database and runs all pending migrations.
+ */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -14,6 +26,7 @@ import postgres from 'postgres';
 //
 // Uses a separate single-connection client per Drizzle's recommendation
 // — the migration step shouldn't share the runtime pool.
+/** Runs all pending Drizzle migrations; throws if DATABASE_URL is not set. */
 export async function runMigrations(): Promise<void> {
   const connectionString = process.env['DATABASE_URL'];
   if (!connectionString) {

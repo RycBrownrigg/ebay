@@ -1,3 +1,14 @@
+/**
+ * eBay access token cache and refresh logic.
+ *
+ * Returns a valid access token for a given app user, minting a new one from
+ * the sealed refresh token when the cached value is missing or within 60 s of
+ * expiry. Persists the refreshed token back to the ebay_auth row so subsequent
+ * calls within the same window reuse it without another round-trip.
+ *
+ * Exports:
+ * - `getEbayAccessToken` — Returns a live eBay access token for the given userId.
+ */
 import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { ebayAuth } from '../db/schema.js';
@@ -14,6 +25,11 @@ const REFRESH_BUFFER_MS = 60_000;
 //
 // Used by the M1.3+ Trading API client. Throws if the user has not
 // completed the OAuth flow yet (no ebay_auth row).
+/**
+ * Returns a valid eBay access token for the given app user, refreshing from
+ * the sealed refresh token if the cached value is absent or near expiry.
+ * @throws If the user has no ebay_auth row (eBay not yet connected).
+ */
 export async function getEbayAccessToken(userId: string): Promise<string> {
   const row = await db
     .select()

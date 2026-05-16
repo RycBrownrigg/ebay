@@ -1,3 +1,21 @@
+/**
+ * Drizzle ORM table definitions and inferred TypeScript types.
+ *
+ * Defines four tables — users, ebay_auth, listing_drafts, and draft_images —
+ * plus a custom bytea column type for storing binary-sealed values. All type
+ * aliases are derived from Drizzle's $inferSelect/$inferInsert to stay in sync
+ * with the schema automatically.
+ *
+ * Exports:
+ * - `users`                — pg table: household user accounts.
+ * - `ebayAuth`             — pg table: per-user eBay OAuth tokens (sealed refresh token).
+ * - `listingDrafts`        — pg table: work-in-progress listing drafts.
+ * - `draftImages`          — pg table: processed images attached to listing drafts.
+ * - `User`, `NewUser`      — Select/insert types for the users table.
+ * - `EbayAuth`, `NewEbayAuth`                   — Select/insert types for ebay_auth.
+ * - `ListingDraftRecord`, `NewListingDraftRecord` — Select/insert types for listing_drafts.
+ * - `DraftImage`, `NewDraftImage`               — Select/insert types for draft_images.
+ */
 import { customType, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import type { ListingDraft } from '@ebay/shared';
 

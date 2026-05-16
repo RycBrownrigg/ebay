@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * Saved listing drafts list panel.
+ *
+ * Fetches the drafts list from GET /api/drafts, renders each draft as a
+ * selectable row, and provides a delete button per row. Highlights the
+ * currently active draft and notifies the parent on selection or deletion.
+ *
+ * Exports:
+ * - `DraftsPanel`  — Scrollable list of saved drafts with select and delete controls.
+ * - `DraftRecord`  — TypeScript shape of a draft row returned by the API.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ListingDraft } from '@ebay/shared';
 
@@ -33,6 +44,7 @@ interface DraftsPanelProps {
   onDraftDeleted: (id: string) => void;
 }
 
+/** Renders the list of saved drafts with select and delete controls. */
 export function DraftsPanel({ activeDraftId, onSelectDraft, onDraftDeleted }: DraftsPanelProps) {
   const queryClient = useQueryClient();
   const draftsQuery = useQuery({

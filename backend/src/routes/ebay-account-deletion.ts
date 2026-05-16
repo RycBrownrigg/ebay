@@ -1,3 +1,16 @@
+/**
+ * eBay marketplace account deletion notification endpoint.
+ *
+ * Implements the two-step eBay notification contract: a GET challenge-response
+ * for endpoint verification, and a POST handler for actual deletion events.
+ * The POST handler ACKs with 204 to prevent eBay from retrying; real data
+ * purging will be added in a later milestone once user data is linked to
+ * eBay accounts.
+ *
+ * Routes:
+ * - GET  / — Responds to eBay's endpoint challenge with a SHA-256 hash response.
+ * - POST / — ACKs account-deletion notifications; no-op until user data is linked.
+ */
 import { Hono } from 'hono';
 import { createHash } from 'node:crypto';
 

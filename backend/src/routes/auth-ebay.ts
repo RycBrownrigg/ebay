@@ -1,3 +1,16 @@
+/**
+ * eBay OAuth 2.0 authentication routes.
+ *
+ * Manages the three-step OAuth flow: initiating consent, handling the
+ * callback, and acknowledging declined authorisations. Stores the sealed
+ * refresh token in ebay_auth and upserts on reconnect so re-connecting
+ * always overwrites cleanly.
+ *
+ * Routes:
+ * - GET /login    — Generates a CSRF state token and redirects to eBay's consent page.
+ * - GET /callback — Exchanges the auth code for tokens, seals the refresh token, and stores it.
+ * - GET /declined — Clears the state cookie and renders a declined-consent acknowledgement page.
+ */
 import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';

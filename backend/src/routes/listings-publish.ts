@@ -1,3 +1,14 @@
+/**
+ * Listing publish route.
+ *
+ * Accepts a validated listing draft body and publishes it to eBay via the
+ * Trading API AddFixedPriceItem call. Falls back to a hardcoded smoke-test
+ * payload when no body is provided (M1 curl path). On success, deletes the
+ * source draft so it no longer appears in the drafts list.
+ *
+ * Routes:
+ * - POST / — Validates the body against ListingDraftSchema and publishes to eBay; returns the item ID and listing URL.
+ */
 import { Hono } from 'hono';
 import { ListingDraftSchema, type ListingDraft } from '@ebay/shared';
 import { getOrCreateHouseholdUser } from '../db/household.js';

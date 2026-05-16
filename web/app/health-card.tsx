@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * Backend health status display card.
+ *
+ * Polls GET /api/health via React Query and renders the service status,
+ * version, and uptime. Shows a loading placeholder while the request is
+ * in-flight and an error message if the backend is unreachable.
+ *
+ * Exports:
+ * - `HealthCard` — Displays the current backend health status.
+ */
 import { useQuery } from '@tanstack/react-query';
 import { HealthResponseSchema, type HealthResponse } from '@ebay/shared';
 
@@ -16,6 +26,7 @@ async function fetchHealth(): Promise<HealthResponse> {
   return parsed.data;
 }
 
+/** Renders the backend health status, uptime, and version from /api/health. */
 export function HealthCard() {
   const { data, error, isPending } = useQuery({
     queryKey: ['health'],

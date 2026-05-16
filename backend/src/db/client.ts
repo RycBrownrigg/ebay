@@ -1,3 +1,15 @@
+/**
+ * Lazy-initialised Drizzle database client.
+ *
+ * Exposes `db` as a Proxy that defers the DATABASE_URL read and connection
+ * creation until the first property access. This prevents the env-var read
+ * from firing at import time, which would crash the test runner before any
+ * `beforeEach` can configure the environment.
+ *
+ * Exports:
+ * - `db` — Proxy-wrapped Drizzle client; initialised on first use.
+ * - `DB` — TypeScript type of the Drizzle client instance.
+ */
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';

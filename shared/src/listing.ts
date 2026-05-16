@@ -1,3 +1,16 @@
+/**
+ * Canonical listing-draft schema and type, shared across all packages.
+ *
+ * Source of truth for what a user can enter when creating or editing a
+ * listing. Used by the web form for client-side validation and by the backend
+ * publish route for server-side validation. The backend's Trading API payload
+ * type (ListingPayload) is currently structurally identical; if they diverge
+ * later, the divergence is handled at the route boundary, not here.
+ *
+ * Exports:
+ * - `ListingDraftSchema` — Zod schema with transforms for listing-draft fields.
+ * - `ListingDraft`       — TypeScript type inferred from ListingDraftSchema.
+ */
 import { z } from 'zod';
 
 // Canonical listing-draft contract shared between web (form), backend

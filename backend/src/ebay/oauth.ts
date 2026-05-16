@@ -1,3 +1,22 @@
+/**
+ * eBay OAuth 2.0 helpers — pure HTTP with no database access.
+ *
+ * Handles config loading, consent URL construction, authorization-code exchange,
+ * access-token refresh, and eBay user-info lookup. Keeping DB operations out of
+ * this module makes it testable without spinning up Postgres. The caching layer
+ * that decides when to refresh lives in access-token.ts.
+ *
+ * Exports:
+ * - `loadOAuthConfig`       — Reads env vars and returns an EbayOAuthConfig; throws if any required var is missing.
+ * - `buildConsentUrl`       — Constructs the eBay OAuth consent redirect URL with a CSRF state token.
+ * - `exchangeCodeForTokens` — Exchanges an authorization code for access + refresh tokens.
+ * - `refreshAccessToken`    — Mints a new access token from a refresh token.
+ * - `fetchEbayUserInfo`     — Fetches the eBay-side userId for the holder of an access token.
+ * - `EbayOAuthConfig`       — Config object type returned by loadOAuthConfig.
+ * - `EbayUserInfo`          — Shape of the userinfo API response.
+ * - `TokenResponse`         — Parsed token endpoint response.
+ * - `EbayEnv`               — Union type: 'sandbox' | 'production'.
+ */
 import { z } from 'zod';
 
 // Pure HTTP/URL operations against eBay's OAuth endpoints. No DB imports
@@ -53,6 +72,7 @@ export interface EbayOAuthConfig {
   endpoints: EbayOAuthEndpoints;
 }
 
+/** Reads eBay OAuth config from env vars; throws with a descriptive message if any required var is missing. */
 export function loadOAuthConfig(): EbayOAuthConfig {
   const envRaw = process.env['EBAY_ENV'] ?? 'sandbox';
   if (envRaw !== 'sandbox' && envRaw !== 'production') {
@@ -82,6 +102,7 @@ export function loadOAuthConfig(): EbayOAuthConfig {
   };
 }
 
+/** Builds the eBay OAuth consent URL including scopes and the CSRF state token. */
 export function buildConsentUrl(config: EbayOAuthConfig, state: string): string {
   const params = new URLSearchParams({
     client_id: config.appId,
@@ -129,6 +150,7 @@ async function postToken(config: EbayOAuthConfig, body: URLSearchParams): Promis
   return TokenResponseSchema.parse(json);
 }
 
+/** Exchanges an authorization code for an access token + refresh token pair. */
 export async function exchangeCodeForTokens(
   config: EbayOAuthConfig,
   code: string,
@@ -143,6 +165,7 @@ export async function exchangeCodeForTokens(
   );
 }
 
+/** Mints a new access token from a refresh token; does not return a new refresh token. */
 export async function refreshAccessToken(
   config: EbayOAuthConfig,
   refreshToken: string,
@@ -167,6 +190,7 @@ export type EbayUserInfo = z.infer<typeof UserInfoSchema>;
 // Looks up the eBay-side user id for the holder of an access token via
 // commerce.identity.readonly. We pin this to ebay_auth.ebay_user_id so
 // account-deletion notifications can be scoped to the right row.
+/** Fetches the eBay-side userId and username for the holder of the given access token. */
 export async function fetchEbayUserInfo(
   config: EbayOAuthConfig,
   accessToken: string,

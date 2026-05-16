@@ -1,6 +1,17 @@
+/**
+ * Application home page (server component).
+ *
+ * Renders the top-level layout: a backend health card and the full listings
+ * workflow (drafts list, image uploader, listing form). All interactive
+ * elements are delegated to client components.
+ *
+ * Exports:
+ * - `HomePage` — Default-exported server component that composes the page layout.
+ */
 import { HealthCard } from './health-card';
 import { ListingsPage } from './listings-page';
 
+/** Root page layout: health status section and the full listing-management workflow. */
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-2xl p-8">

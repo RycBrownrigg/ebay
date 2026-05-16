@@ -1,3 +1,15 @@
+/**
+ * AEAD encryption helpers for sealing the eBay refresh token at rest.
+ *
+ * Uses XChaCha20-Poly1305 (24-byte nonce, 32-byte key, Poly1305 integrity tag).
+ * Storage layout on disk/DB is: nonce(24) || ciphertext+tag. Each call to
+ * `sealRefreshToken` generates a fresh random nonce, so identical plaintexts
+ * produce different ciphertext while the tag still authenticates the bytes.
+ *
+ * Exports:
+ * - `sealRefreshToken`   — Encrypts a plaintext refresh token and returns the sealed buffer.
+ * - `unsealRefreshToken` — Decrypts a sealed buffer and returns the plaintext token.
+ */
 import { randomBytes } from 'node:crypto';
 import { xchacha20poly1305 } from '@noble/ciphers/chacha';
 
@@ -30,6 +42,7 @@ function loadKey(): Uint8Array {
   return new Uint8Array(buf);
 }
 
+/** Encrypts a plaintext refresh token string into a sealed binary buffer. */
 export function sealRefreshToken(plaintext: string): Buffer {
   const key = loadKey();
   const nonce = randomBytes(NONCE_BYTES);
@@ -38,6 +51,9 @@ export function sealRefreshToken(plaintext: string): Buffer {
   return Buffer.concat([nonce, Buffer.from(ct)]);
 }
 
+/** Decrypts a sealed buffer and returns the original plaintext refresh token.
+ * @throws If the buffer is too short or the Poly1305 tag fails to authenticate.
+ */
 export function unsealRefreshToken(sealed: Buffer): string {
   if (sealed.length < NONCE_BYTES + TAG_BYTES) {
     throw new Error('sealed value is shorter than nonce + tag');

@@ -1,3 +1,18 @@
+/**
+ * eBay Trading API response parsers and result types.
+ *
+ * Parses AddFixedPriceItemResponse XML into a typed discriminated union.
+ * eBay returns an Ack element of Success, Warning, Failure, or PartialFailure;
+ * errors and warnings share the same Errors array shape and are distinguished
+ * by SeverityCode.
+ *
+ * Exports:
+ * - `parseAddFixedPriceItemResponse` — Parses AddFixedPriceItem XML and returns an AddItemResult.
+ * - `ParsedError`                    — Normalised error/warning shape from an Errors element.
+ * - `AddItemSuccess`                 — Result shape when Ack is Success or Warning.
+ * - `AddItemFailure`                 — Result shape when Ack is Failure or PartialFailure.
+ * - `AddItemResult`                  — Union of AddItemSuccess and AddItemFailure.
+ */
 import { XMLParser } from 'fast-xml-parser';
 import { z } from 'zod';
 
@@ -66,6 +81,10 @@ function mapErrors(raw: z.infer<typeof ErrorSchema>[] | undefined): ParsedError[
   }));
 }
 
+/**
+ * Parses an AddFixedPriceItemResponse XML string into a typed discriminated union.
+ * @throws If the XML doesn't match the expected envelope schema or Ack is unrecognised.
+ */
 export function parseAddFixedPriceItemResponse(xml: string): AddItemResult {
   const json: unknown = parser.parse(xml);
   const validated = AddFixedPriceItemResponseEnvelope.parse(json);

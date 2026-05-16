@@ -1,3 +1,17 @@
+/**
+ * Listing draft CRUD routes.
+ *
+ * Exposes create, list, update, and delete operations for listing drafts.
+ * Drafts are deliberately permissive — no payload validation at save time;
+ * validation happens at publish. All operations are scoped to the household
+ * user via getOrCreateHouseholdUser.
+ *
+ * Routes:
+ * - GET    /    — List all drafts for the household user, newest-edited first.
+ * - POST   /    — Create a new draft with an arbitrary JSON payload.
+ * - PATCH  /:id — Replace the payload of an existing draft; 404 if not found.
+ * - DELETE /:id — Remove a draft; 404 if not found.
+ */
 import { Hono } from 'hono';
 import { getOrCreateHouseholdUser } from '../db/household.js';
 import { createDraft, deleteDraft, listDraftsForUser, updateDraft } from '../db/drafts-repo.js';

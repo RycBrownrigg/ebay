@@ -1,3 +1,16 @@
+/**
+ * Draft image upload and management routes.
+ *
+ * Handles per-draft image lifecycle: upload with sharp processing (resize to
+ * ≤1600 px, strip EXIF, convert to JPEG), listing in sort order, deletion
+ * with best-effort file removal, and sort-order updates. Mounted at /api/drafts.
+ *
+ * Routes:
+ * - GET    /:id/images          — List images for a draft in sort order.
+ * - POST   /:id/images          — Upload one image (multipart field "image"); max 12 per draft.
+ * - DELETE /:id/images/:imageId — Delete image record and its file on disk.
+ * - PATCH  /:id/images/:imageId — Update a single image's sort order.
+ */
 import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';

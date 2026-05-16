@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * Listing draft form with save-draft and publish controls.
+ *
+ * Renders a react-hook-form–managed form validated against ListingDraftSchema.
+ * Supports loading an existing draft (populates all fields), saving a partial
+ * draft without validation, publishing to eBay (full validation), and resetting
+ * to defaults. On a successful publish, deletes the source draft automatically.
+ *
+ * Exports:
+ * - `ListingForm` — Controlled listing form with draft persistence and eBay publish flow.
+ */
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -147,6 +158,7 @@ async function deleteDraftRequest(draftId: string): Promise<void> {
   }
 }
 
+/** Form for editing, saving, and publishing a listing draft; manages draft lifecycle on success. */
 export function ListingForm({
   activeDraft,
   pictureUrls = [],

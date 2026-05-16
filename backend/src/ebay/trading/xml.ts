@@ -1,3 +1,15 @@
+/**
+ * XML builder for eBay Trading API AddFixedPriceItem requests.
+ *
+ * Produces hand-crafted XML rather than using a serialiser library because
+ * Trading API payloads are small, well-specified, and case-sensitive. Uses
+ * fast-xml-parser only for reading (parsing responses), not for writing.
+ *
+ * Exports:
+ * - `buildAddFixedPriceItemXml` — Serialises a ListingPayload into a complete AddFixedPriceItemRequest XML string.
+ * - `ListingPayload`            — Input shape for the XML builder.
+ * - `ListingDuration`           — Union of accepted eBay listing duration strings.
+ */
 // Hand-built XML for eBay Trading API AddFixedPriceItem requests.
 // Per BUILD_PLAN.md §1: hand-written for writing (Trading API payloads
 // are small and well-specified), fast-xml-parser for reading.
@@ -53,6 +65,7 @@ function picturesXml(urls: string[]): string {
   ].join('');
 }
 
+/** Serialises a ListingPayload into a complete AddFixedPriceItemRequest XML string. */
 export function buildAddFixedPriceItemXml(payload: ListingPayload): string {
   const dispatchDays = payload.dispatchTimeMaxDays ?? 3;
   const duration = payload.listingDuration ?? 'GTC';

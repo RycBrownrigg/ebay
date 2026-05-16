@@ -1,3 +1,15 @@
+/**
+ * Low-level eBay Trading API HTTP client.
+ *
+ * Targets the legacy Trading endpoint (/ws/api.dll) using the modern
+ * X-EBAY-API-IAF-TOKEN OAuth auth header. The historic AppID/DevID/CertID
+ * headers are not required when using IAF-TOKEN — eBay derives the app
+ * context from the token itself.
+ *
+ * Exports:
+ * - `callTradingApi`      — Posts an XML body to the Trading API and returns the raw XML response.
+ * - `TradingCallOptions`  — Options type for callTradingApi.
+ */
 import { loadOAuthConfig } from '../oauth.js';
 
 // Trading API HTTP client. Targets the legacy Trading endpoint
@@ -17,6 +29,7 @@ export interface TradingCallOptions {
   body: string; // already-built XML
 }
 
+/** Posts a Trading API XML request and returns the raw XML response string. */
 export async function callTradingApi(opts: TradingCallOptions): Promise<string> {
   const config = loadOAuthConfig();
   const url = `${config.endpoints.apiBase}/ws/api.dll`;

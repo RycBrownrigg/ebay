@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * Top-level listings workflow client component.
+ *
+ * Holds the active-draft state and threads it between the drafts list, the
+ * image uploader, and the listing form. Acts as the glue layer so its children
+ * remain stateless with respect to which draft is loaded.
+ *
+ * Exports:
+ * - `ListingsPage` — Composes DraftsPanel, ImageUploader, and ListingForm with shared draft state.
+ */
 import { useCallback, useState } from 'react';
 import { DraftsPanel, type DraftRecord } from './drafts-panel';
 import { ImageUploader } from './image-uploader';
@@ -10,6 +20,7 @@ import { ListingForm } from './listing-form';
 // image uploader, and the form. Lives here rather than inside any
 // child so they don't have to know about each other.
 
+/** Composes the drafts panel, image uploader, and listing form with shared active-draft state. */
 export function ListingsPage() {
   const [activeDraft, setActiveDraft] = useState<DraftRecord | null>(null);
   const [draftImageUrls, setDraftImageUrls] = useState<string[]>([]);
